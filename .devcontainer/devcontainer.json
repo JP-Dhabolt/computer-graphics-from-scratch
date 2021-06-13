@@ -1,0 +1,45 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.183.0/containers/typescript-node
+{
+	"name": "Graphics from Scratch",
+	"dockerComposeFile":[
+		"docker-compose.yml",
+		"docker-compose.vscode.yml",
+	],
+	"service": "app",
+	"workspaceFolder": "/workspace",
+	// Set *default* container specific settings.json values on container create.
+	"settings": {
+		"[typescript]": {
+			"editor.insertSpaces": true,
+			"editor.tabSize": 2,
+		},
+		"[javascript]": {
+			"editor.insertSpaces": true,
+			"editor.tabSize": 2,
+		},
+		"[javascriptreact]": {
+			"editor.insertSpaces": true,
+			"editor.tabSize": 2,
+		},
+	},
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"dbaeumer.vscode-eslint",
+		"orta.vscode-jest"
+	],
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [3000],
+	"portsAttributes": {
+		"3000": {
+			"label": "Dev App",
+			"onAutoForward": "notify"
+		}
+	},
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "yarn install",
+
+	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "node",
+}
