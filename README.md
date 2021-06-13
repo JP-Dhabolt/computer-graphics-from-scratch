@@ -1,5 +1,7 @@
 # computer-graphics-from-scratch
+
 My implementation following [Computer Graphics From Scratch](https://gabrielgambetta.com/computer-graphics-from-scratch/).
+
 # create-svelte
 
 Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte);
