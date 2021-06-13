@@ -1,4 +1,4 @@
-.PHONY: install lint lint-ci
+.PHONY: install lint lint-ci run
 
 install:
 	yarn install --frozen-lockfile
@@ -8,3 +8,6 @@ lint:
 
 lint-ci:
 	yarn run lint
+
+run:
+	yarn run dev
