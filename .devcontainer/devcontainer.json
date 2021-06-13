@@ -26,15 +26,15 @@
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"dbaeumer.vscode-eslint",
-		"orta.vscode-jest"
+		"svelte.svelte-vscode",
 	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [3000],
 	"portsAttributes": {
 		"3000": {
 			"label": "Dev App",
-			"onAutoForward": "notify"
-		}
+			"onAutoForward": "notify",
+		},
 	},
 
 	// Use 'postCreateCommand' to run commands after the container is created.
