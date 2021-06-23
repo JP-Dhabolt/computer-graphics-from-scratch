@@ -1,5 +1,6 @@
-import { dotProduct, subtract } from './algebra';
+import { add, dotProduct, length, multiply, subtract } from './algebra';
 import type { Color } from './colors';
+import { computeLighting } from './lights';
 import type { Sphere } from './shapes/sphere';
 import type { StaticScene, Vector2, Vector3 } from './types';
 
@@ -87,8 +88,16 @@ export class Renderer {
     if (closestSphere === null) {
       return this.backgroundColor;
     }
-
-    return closestSphere.color;
+    const point = add(origin, multiply(closestT, direction)); // Compute intersection
+    let normal = subtract(point, closestSphere.center); // Compute sphere normal at intersection
+    normal = multiply(1.0 / length(normal), normal);
+    const intensity = computeLighting(point, normal, scene);
+    return {
+      ...closestSphere.color,
+      red: closestSphere.color.red * intensity,
+      blue: closestSphere.color.blue * intensity,
+      green: closestSphere.color.green * intensity,
+    };
   }
 }
 
