@@ -6,7 +6,7 @@
     "dev": "svelte-kit dev",
     "build": "svelte-kit build",
     "preview": "svelte-kit preview",
-    "compile": "svelte-check --tsconfig ./tsconfig.json",
+    "compile": "svelte-check --tsconfig ./tsconfig.json --fail-on-hints",
     "compile:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write . && eslint --fix .",
