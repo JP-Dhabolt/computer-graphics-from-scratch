@@ -1,5 +1,5 @@
 <script lang="typescript">
-  import { onMount, setContext } from 'svelte';
+  import { setContext } from 'svelte';
   const width = 600;
   const height = 600;
   let canvas: HTMLCanvasElement;
