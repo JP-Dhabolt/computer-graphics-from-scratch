@@ -1,15 +1,15 @@
 <script lang="typescript">
-  import { onMount } from 'svelte';
+  import { onMount, getContext } from 'svelte';
 
   import { scene } from '$lib/scenes/chapter-2-scene';
   import { Renderer } from '$lib/renderer';
 
-  const width = 600;
-  const height = 600;
-
-  let canvas: HTMLCanvasElement;
+  const { getCanvas } = getContext<{ getCanvas: () => HTMLCanvasElement }>('canvas');
 
   onMount(() => {
+    const canvas = getCanvas();
+    const width = canvas.width;
+    const height = canvas.height;
     const r = new Renderer({ canvas });
     for (let x = -width / 2; x < width / 2; x++) {
       for (let y = -height / 2; y < height / 2; y++) {
@@ -36,10 +36,3 @@
   avoid duplication of effort between chapters. As I continue through the chapters, this logic will most certainly be
   refactored and refined.
 </p>
-<canvas bind:this={canvas} {width} {height} />
-
-<style>
-  canvas {
-    border: 1px grey solid;
-  }
-</style>
