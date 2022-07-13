@@ -26,6 +26,11 @@ export class Point implements PointLight {
   intensity: number;
   position: Vector3;
 
+  constructor(position: Vector3, intensity: number) {
+    this.position = position;
+    this.intensity = intensity;
+  }
+
   calculateIntensity(point: Vector3, normal: Vector3): number {
     const lightVector = subtract(this.position, point);
     const dot = dotProduct(normal, lightVector);
@@ -40,6 +45,11 @@ export class Directional implements DirectionalLight {
   type: 'directional';
   intensity: number;
   direction: Vector3;
+
+  constructor(direction: Vector3, intensity: number) {
+    this.direction = direction;
+    this.intensity = intensity;
+  }
 
   calculateIntensity(_: Vector3, normal: Vector3): number {
     const dot = dotProduct(normal, this.direction);

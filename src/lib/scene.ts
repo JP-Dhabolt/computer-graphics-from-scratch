@@ -6,9 +6,11 @@ export class Scene implements StaticScene {
   spheres: Sphere[] = [];
   lights: SceneLight[] = [];
 
-  constructor(useStaticLight: boolean) {
-    if (useStaticLight) {
-      this.addLight(new Ambient(1));
+  constructor(lights: SceneLight[] = []) {
+    if (lights.length === 0) {
+      this.addLights([new Ambient(1)]);
+    } else {
+      this.addLights(lights);
     }
   }
 
@@ -24,8 +26,8 @@ export class Scene implements StaticScene {
     this.spheres.push(sphere);
   }
 
-  addLight(light: SceneLight): void {
-    this.lights.push(light);
+  addLights(light: SceneLight[]): void {
+    this.lights.push(...light);
 
     const totalIntensity = this.lights.reduce((prev, curr) => {
       prev += curr.intensity;
