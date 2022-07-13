@@ -1,4 +1,4 @@
-import { add, dotProduct, length, multiply, subtract } from './algebra';
+import { add, clamp, dotProduct, length, multiply, subtract } from './algebra';
 import type { Color } from './colors';
 import { computeLighting } from './lights';
 import type { Sphere } from './shapes/sphere';
@@ -91,12 +91,12 @@ export class Renderer {
     const point = add(origin, multiply(closestT, direction)); // Compute intersection
     let normal = subtract(point, closestSphere.center); // Compute sphere normal at intersection
     normal = multiply(1.0 / length(normal), normal);
-    const intensity = computeLighting(point, normal, scene);
+    const intensity = computeLighting(point, normal, multiply(-1, direction), scene, closestSphere.specular);
     return {
       ...closestSphere.color,
-      red: closestSphere.color.red * intensity,
-      blue: closestSphere.color.blue * intensity,
-      green: closestSphere.color.green * intensity,
+      red: clamp(closestSphere.color.red * intensity, 0, 255),
+      blue: clamp(closestSphere.color.blue * intensity, 0, 255),
+      green: clamp(closestSphere.color.green * intensity, 0, 255),
     };
   }
 }

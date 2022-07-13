@@ -9,7 +9,7 @@ export interface StaticScene {
 }
 
 export interface BaseLight {
-  calculateIntensity: (point: Vector3, normal: Vector3) => number;
+  calculateIntensity: (point: Vector3, normal: Vector3, viewVector: Vector3, specular: number) => number;
 }
 
 export interface AmbientLight extends BaseLight {

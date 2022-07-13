@@ -19,3 +19,7 @@ export function length(vector: Vector3): number {
 export function multiply(x: number, v: Vector3): Vector3 {
   return [x * v[0], x * v[1], x * v[2]];
 }
+
+export function clamp(x: number, min: number, max: number): number {
+  return Math.min(Math.max(x, min), max);
+}
