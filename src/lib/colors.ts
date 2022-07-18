@@ -22,3 +22,9 @@ export const Blue: Color = {
   green: 0,
   blue: 255,
 };
+
+export const Yellow: Color = {
+  red: 255,
+  green: 255,
+  blue: 0,
+};
