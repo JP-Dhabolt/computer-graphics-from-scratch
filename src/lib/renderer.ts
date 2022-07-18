@@ -91,7 +91,7 @@ export class Renderer {
     const point = add(origin, multiply(closestT, direction)); // Compute intersection
     let normal = subtract(point, closestSphere.center); // Compute sphere normal at intersection
     normal = multiply(1.0 / length(normal), normal);
-    const intensity = computeLighting(point, normal, multiply(-1, direction), scene, closestSphere.specular);
+    const intensity = computeLighting(point, normal, multiply(-1, direction), scene.lights, closestSphere.specular);
     return {
       ...closestSphere.color,
       red: clamp(closestSphere.color.red * intensity, 0, 255),

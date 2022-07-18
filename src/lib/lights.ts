@@ -1,15 +1,15 @@
 import { dotProduct, length, multiply, subtract } from './algebra';
-import type { AmbientLight, DirectionalLight, PointLight, StaticScene, Vector3 } from './types';
+import type { AmbientLight, DirectionalLight, PointLight, SceneLight, Vector3 } from './types';
 
 export function computeLighting(
   point: Vector3,
   normal: Vector3,
   viewVector: Vector3,
-  scene: StaticScene,
+  lights: SceneLight[],
   specular = -1
 ): number {
   let intensity = 0.0;
-  scene.lights.forEach((light) => {
+  lights.forEach((light) => {
     intensity += light.calculateIntensity(point, normal, viewVector, specular);
   });
   return intensity;
@@ -40,6 +40,19 @@ function calculateDiffuseLightIntensity(lightVector: Vector3, normal: Vector3, l
   return 0;
 }
 
+function calculateLightIntensity(
+  direction: Vector3,
+  normal: Vector3,
+  viewVector: Vector3,
+  lightIntensity: number,
+  specular: number
+) {
+  return (
+    calculateDiffuseLightIntensity(direction, normal, lightIntensity) +
+    calculateSpecularLightIntensity(specular, normal, direction, viewVector, lightIntensity)
+  );
+}
+
 export class Ambient implements AmbientLight {
   type: 'ambient' = 'ambient';
   intensity: number;
@@ -64,11 +77,8 @@ export class Point implements PointLight {
   }
 
   calculateIntensity(point: Vector3, normal: Vector3, viewVector: Vector3, specular: number): number {
-    let intensity = 0.0;
     const lightVector = subtract(this.position, point);
-    intensity += calculateDiffuseLightIntensity(lightVector, normal, this.intensity);
-    intensity += calculateSpecularLightIntensity(specular, normal, lightVector, viewVector, this.intensity);
-    return intensity;
+    return calculateLightIntensity(lightVector, normal, viewVector, this.intensity, specular);
   }
 }
 
@@ -83,9 +93,6 @@ export class Directional implements DirectionalLight {
   }
 
   calculateIntensity(_: Vector3, normal: Vector3, viewVector: Vector3, specular: number): number {
-    let intensity = 0.0;
-    intensity += calculateDiffuseLightIntensity(this.direction, normal, this.intensity);
-    intensity += calculateSpecularLightIntensity(specular, normal, this.direction, viewVector, this.intensity);
-    return intensity;
+    return calculateLightIntensity(this.direction, normal, viewVector, this.intensity, specular);
   }
 }
