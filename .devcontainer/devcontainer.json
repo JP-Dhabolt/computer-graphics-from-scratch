@@ -1,36 +1,33 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.183.0/containers/typescript-node
 {
   "name": "Graphics from Scratch",
-  "dockerComposeFile": ["docker-compose.yml", "docker-compose.vscode.yml"],
-  "service": "app",
-  "workspaceFolder": "/workspace",
-  // Set *default* container specific settings.json values on container create.
-  "settings": {
-    "[typescript]": {
-      "editor.insertSpaces": true,
-      "editor.tabSize": 2
-    },
-    "[javascript]": {
-      "editor.insertSpaces": true,
-      "editor.tabSize": 2
-    },
-    "[javascriptreact]": {
-      "editor.insertSpaces": true,
-      "editor.tabSize": 2
-    },
-    "[svelte]": {
-      "editor.insertSpaces": true,
-      "editor.tabSize": 2
-    },
-    "[html]": {
-      "editor.insertSpaces": true,
-      "editor.tabSize": 2
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-18-bullseye",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "[typescript]": {
+          "editor.insertSpaces": true,
+          "editor.tabSize": 2
+        },
+        "[javascript]": {
+          "editor.insertSpaces": true,
+          "editor.tabSize": 2
+        },
+        "[javascriptreact]": {
+          "editor.insertSpaces": true,
+          "editor.tabSize": 2
+        },
+        "[svelte]": {
+          "editor.insertSpaces": true,
+          "editor.tabSize": 2
+        },
+        "[html]": {
+          "editor.insertSpaces": true,
+          "editor.tabSize": 2
+        }
+      },
+      "extensions": ["dbaeumer.vscode-eslint", "svelte.svelte-vscode"]
     }
   },
-  // Add the IDs of extensions you want installed when the container is created.
-  "extensions": ["dbaeumer.vscode-eslint", "svelte.svelte-vscode"],
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [3000],
   "portsAttributes": {
     "3000": {
@@ -38,10 +35,5 @@
       "onAutoForward": "notify"
     }
   },
-
-  // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "make install",
-
-  // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-  "remoteUser": "node"
+  "postCreateCommand": "make install"
 }
