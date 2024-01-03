@@ -6,6 +6,7 @@ export class Sphere {
     public readonly center: Vector3,
     public readonly radius: number,
     public readonly color: Color,
-    public readonly specular: number = -1
+    public readonly specular: number = -1,
+    public readonly reflectivity: number = 0
   ) {}
 }

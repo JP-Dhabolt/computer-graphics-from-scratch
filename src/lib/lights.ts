@@ -2,7 +2,7 @@ import { dotProduct, length, multiply, subtract } from './algebra';
 import type { AmbientLight, DirectionalLight, PointLight, StaticScene, Vector3 } from './types';
 import { calculateClosestIntersection } from './utilities';
 
-const MIN_TIME_ABOVE_ZERO = 0.001;
+export const MIN_TIME_ABOVE_ZERO = 0.001;
 
 export function computeLighting(
   point: Vector3,
@@ -26,13 +26,17 @@ function calculateSpecularLightIntensity(
   lightIntensity: number
 ) {
   if (specular != -1) {
-    const reflectionVector = subtract(multiply(dotProduct(normal, lightVector), multiply(2, normal)), lightVector);
+    const reflectionVector = calculateReflectionVector(normal, lightVector);
     const reflectionViewDot = dotProduct(reflectionVector, viewVector);
     if (reflectionViewDot > 0) {
       return lightIntensity * Math.pow(reflectionViewDot / (length(reflectionVector) * length(viewVector)), specular);
     }
   }
   return 0;
+}
+
+export function calculateReflectionVector(normal: Vector3, lightVector: Vector3): Vector3 {
+  return subtract(multiply(dotProduct(normal, lightVector), multiply(2, normal)), lightVector);
 }
 
 function calculateDiffuseLightIntensity(lightVector: Vector3, normal: Vector3, lightIntensity: number): number {

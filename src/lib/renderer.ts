@@ -1,9 +1,11 @@
 import { add, clamp, length, multiply, subtract } from './algebra';
 import type { Color } from './colors';
-import { computeLighting } from './lights';
+import { MIN_TIME_ABOVE_ZERO, calculateReflectionVector, computeLighting } from './lights';
 import { Scene } from './scene';
 import type { StaticScene, Vector2, Vector3 } from './types';
 import { calculateClosestIntersection } from './utilities';
+
+const MAX_RECURSION_DEPTH = 3;
 
 export interface RendererOptions {
   canvas: HTMLCanvasElement;
@@ -19,6 +21,7 @@ export interface TraceRayInput {
   direction: Vector3;
   minTime: number;
   maxTime: number;
+  recursionDepth?: number;
 }
 
 export class Renderer {
@@ -56,7 +59,7 @@ export class Renderer {
     this.buffer.data[offset++] = color.red;
     this.buffer.data[offset++] = color.green;
     this.buffer.data[offset++] = color.blue;
-    this.buffer.data[offset++] = color.alpha || 255;
+    this.buffer.data[offset++] = color.alpha !== undefined ? color.alpha : 255;
   }
 
   updateCanvas(): void {
@@ -71,7 +74,8 @@ export class Renderer {
     ];
   }
 
-  traceRay({ origin, direction, minTime, maxTime }: TraceRayInput): Color {
+  traceRay({ origin, direction, minTime, maxTime, recursionDepth }: TraceRayInput): Color {
+    const actualRecursion = recursionDepth || 0;
     const { closestSphere, closestT } = calculateClosestIntersection({
       scene: this.scene,
       origin,
@@ -87,11 +91,30 @@ export class Renderer {
     let normal = subtract(point, closestSphere.center); // Compute sphere normal at intersection
     normal = multiply(1.0 / length(normal), normal);
     const intensity = computeLighting(point, normal, multiply(-1, direction), this.scene, closestSphere.specular);
-    return {
+    const localColor = {
       ...closestSphere.color,
       red: clamp(closestSphere.color.red * intensity, 0, 255),
       blue: clamp(closestSphere.color.blue * intensity, 0, 255),
       green: clamp(closestSphere.color.green * intensity, 0, 255),
+    };
+
+    const reflectivity = closestSphere.reflectivity;
+    if (actualRecursion >= MAX_RECURSION_DEPTH || reflectivity <= 0) {
+      return localColor;
+    }
+    const reflectedRay = calculateReflectionVector(normal, multiply(-1, direction));
+    const reflectedColor = this.traceRay({
+      origin: point,
+      direction: reflectedRay,
+      minTime: MIN_TIME_ABOVE_ZERO,
+      maxTime: Infinity,
+      recursionDepth: actualRecursion + 1,
+    });
+    return {
+      red: localColor.red * (1 - reflectivity) + reflectedColor.red * reflectivity,
+      green: localColor.green * (1 - reflectivity) + reflectedColor.green * reflectivity,
+      blue: localColor.blue * (1 - reflectivity) + reflectedColor.blue * reflectivity,
+      alpha: (localColor.alpha || 255) * (1 - reflectivity) + (reflectedColor.alpha || 255) * reflectivity,
     };
   }
 }
