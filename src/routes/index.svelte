@@ -49,6 +49,11 @@
 </script>
 
 <h1>Welcome to Computer Graphics From Scratch</h1>
+<p>
+  The rendering from the below chapters will change over time, as the renderer is updated over time, and I am not
+  versioning the renderer implementations to keep them static as they were per chapter. Individual scenes are defined as
+  per the book's scenes.
+</p>
 <div>
   {#each fullChapters as { relativeUrl, chapterNumber, chapterTitle }}
     <p><a href={`chapters/${relativeUrl}`}>{`Chapter ${chapterNumber}`}</a>{`: ${chapterTitle}`}</p>

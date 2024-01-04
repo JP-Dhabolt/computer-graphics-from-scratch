@@ -11,7 +11,7 @@
     const canvas = getCanvas();
     const width = canvas.width;
     const height = canvas.height;
-    const r = new Renderer({ canvas });
+    const r = new Renderer({ canvas, scene });
     for (let x = -width / 2; x < width / 2; x++) {
       for (let y = -height / 2; y < height / 2; y++) {
         const direction = r.canvasToViewport([x, y]);
@@ -20,7 +20,6 @@
           direction,
           minTime: 1,
           maxTime: Infinity,
-          scene,
         });
         r.putPixel(x, y, color);
       }

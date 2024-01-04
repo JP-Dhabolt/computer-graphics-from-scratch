@@ -1,8 +1,11 @@
-import { add, clamp, dotProduct, length, multiply, subtract } from './algebra';
+import { add, clamp, length, multiply, subtract } from './algebra';
 import type { Color } from './colors';
-import { computeLighting } from './lights';
-import type { Sphere } from './shapes/sphere';
+import { MIN_TIME_ABOVE_ZERO, calculateReflectionVector, computeLighting } from './lights';
+import { Scene } from './scene';
 import type { StaticScene, Vector2, Vector3 } from './types';
+import { calculateClosestIntersection } from './utilities';
+
+const MAX_RECURSION_DEPTH = 3;
 
 export interface RendererOptions {
   canvas: HTMLCanvasElement;
@@ -10,6 +13,7 @@ export interface RendererOptions {
   zProjectionPlane?: number;
   cameraPosition?: Vector3;
   backgroundColor?: Color;
+  scene?: StaticScene;
 }
 
 export interface TraceRayInput {
@@ -17,7 +21,7 @@ export interface TraceRayInput {
   direction: Vector3;
   minTime: number;
   maxTime: number;
-  scene: StaticScene;
+  recursionDepth?: number;
 }
 
 export class Renderer {
@@ -29,8 +33,9 @@ export class Renderer {
   zProjectionPlane: number;
   cameraPosition: Vector3;
   backgroundColor: Color;
+  scene: StaticScene;
 
-  constructor({ canvas, viewportSize, zProjectionPlane, cameraPosition, backgroundColor }: RendererOptions) {
+  constructor({ canvas, viewportSize, zProjectionPlane, cameraPosition, backgroundColor, scene }: RendererOptions) {
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
     this.buffer = this.context.getImageData(0, 0, canvas.width, canvas.height);
@@ -39,6 +44,7 @@ export class Renderer {
     this.zProjectionPlane = zProjectionPlane || 1;
     this.cameraPosition = cameraPosition || [0, 0, 0];
     this.backgroundColor = backgroundColor || { red: 255, green: 255, blue: 255 };
+    this.scene = scene || new Scene();
   }
 
   putPixel(x: number, y: number, color: Color): void {
@@ -53,7 +59,7 @@ export class Renderer {
     this.buffer.data[offset++] = color.red;
     this.buffer.data[offset++] = color.green;
     this.buffer.data[offset++] = color.blue;
-    this.buffer.data[offset++] = color.alpha || 255;
+    this.buffer.data[offset++] = color.alpha !== undefined ? color.alpha : 255;
   }
 
   updateCanvas(): void {
@@ -68,22 +74,15 @@ export class Renderer {
     ];
   }
 
-  traceRay({ origin, direction, minTime, maxTime, scene }: TraceRayInput): Color {
-    let closestT = Infinity;
-    let closestSphere: Sphere | null = null;
-
-    for (let i = 0; i < scene.spheres.length; i++) {
-      const solutions = intersectRaySphere(origin, direction, scene.spheres[i]);
-      const checkSolution = (s: number) => {
-        if (s < closestT && minTime < s && s < maxTime) {
-          closestT = s;
-          closestSphere = scene.spheres[i];
-        }
-      };
-
-      checkSolution(solutions[0]);
-      checkSolution(solutions[1]);
-    }
+  traceRay({ origin, direction, minTime, maxTime, recursionDepth }: TraceRayInput): Color {
+    const actualRecursion = recursionDepth || 0;
+    const { closestSphere, closestT } = calculateClosestIntersection({
+      scene: this.scene,
+      origin,
+      direction,
+      minTime,
+      maxTime,
+    });
 
     if (closestSphere === null) {
       return this.backgroundColor;
@@ -91,29 +90,31 @@ export class Renderer {
     const point = add(origin, multiply(closestT, direction)); // Compute intersection
     let normal = subtract(point, closestSphere.center); // Compute sphere normal at intersection
     normal = multiply(1.0 / length(normal), normal);
-    const intensity = computeLighting(point, normal, multiply(-1, direction), scene.lights, closestSphere.specular);
-    return {
+    const intensity = computeLighting(point, normal, multiply(-1, direction), this.scene, closestSphere.specular);
+    const localColor = {
       ...closestSphere.color,
       red: clamp(closestSphere.color.red * intensity, 0, 255),
       blue: clamp(closestSphere.color.blue * intensity, 0, 255),
       green: clamp(closestSphere.color.green * intensity, 0, 255),
     };
+
+    const reflectivity = closestSphere.reflectivity;
+    if (actualRecursion >= MAX_RECURSION_DEPTH || reflectivity <= 0) {
+      return localColor;
+    }
+    const reflectedRay = calculateReflectionVector(normal, multiply(-1, direction));
+    const reflectedColor = this.traceRay({
+      origin: point,
+      direction: reflectedRay,
+      minTime: MIN_TIME_ABOVE_ZERO,
+      maxTime: Infinity,
+      recursionDepth: actualRecursion + 1,
+    });
+    return {
+      red: localColor.red * (1 - reflectivity) + reflectedColor.red * reflectivity,
+      green: localColor.green * (1 - reflectivity) + reflectedColor.green * reflectivity,
+      blue: localColor.blue * (1 - reflectivity) + reflectedColor.blue * reflectivity,
+      alpha: (localColor.alpha || 255) * (1 - reflectivity) + (reflectedColor.alpha || 255) * reflectivity,
+    };
   }
-}
-
-function intersectRaySphere(origin: Vector3, direction: Vector3, sphere: Sphere): Vector2 {
-  const originToSphere = subtract(origin, sphere.center);
-
-  const quadraticA = dotProduct(direction, direction);
-  const quadraticB = 2 * dotProduct(originToSphere, direction);
-  const quatraticC = dotProduct(originToSphere, originToSphere) - sphere.radius * sphere.radius;
-
-  const discriminant = quadraticB * quadraticB - 4 * quadraticA * quatraticC;
-  if (discriminant < 0) {
-    return [Infinity, Infinity];
-  }
-
-  const solution1 = (-quadraticB + Math.sqrt(discriminant)) / (2 * quadraticA);
-  const solution2 = (-quadraticB - Math.sqrt(discriminant)) / (2 * quadraticA);
-  return [solution1, solution2];
 }
