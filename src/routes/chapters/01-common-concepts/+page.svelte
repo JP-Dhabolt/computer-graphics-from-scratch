@@ -1,0 +1,25 @@
+<script lang="ts">
+  import { onMount, getContext } from 'svelte';
+
+  import { Green } from '$lib/colors';
+  import { Renderer } from '$lib/renderer';
+
+  const context = getContext<{ getCanvas: () => HTMLCanvasElement }>('canvas');
+  console.log(context);
+
+  onMount(() => {
+    const canvas = context.getCanvas();
+    const width = canvas.width;
+    const renderer = new Renderer({ canvas });
+    for (let x = -width / 2; x < width / 2; x++) {
+      renderer.putPixel(x, 0, Green);
+    }
+    renderer.updateCanvas();
+  });
+</script>
+
+<h1>Chapter 1: Common Concepts</h1>
+<p>
+  Here, I've simply implemented some of the common functionality and drawn a green light in the middle of the canvas to
+  validate functionality.
+</p>

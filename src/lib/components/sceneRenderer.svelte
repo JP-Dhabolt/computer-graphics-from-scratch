@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
   import { onMount, getContext } from 'svelte';
 
   import { Renderer } from '$lib/renderer';

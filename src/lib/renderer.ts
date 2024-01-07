@@ -37,7 +37,11 @@ export class Renderer {
 
   constructor({ canvas, viewportSize, zProjectionPlane, cameraPosition, backgroundColor, scene }: RendererOptions) {
     this.canvas = canvas;
-    this.context = canvas.getContext('2d');
+    const canvasContext = canvas.getContext('2d');
+    if (!canvasContext) {
+      throw new Error('Could not get canvas context');
+    }
+    this.context = canvasContext;
     this.buffer = this.context.getImageData(0, 0, canvas.width, canvas.height);
     this.pitch = this.buffer.width * 4;
     this.viewportSize = viewportSize || 1;
