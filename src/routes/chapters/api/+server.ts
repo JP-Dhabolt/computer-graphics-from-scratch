@@ -1,14 +1,12 @@
 import { readdirSync } from 'fs';
 import * as path from 'path';
-import type { EndpointOutput } from '@sveltejs/kit';
+import { json, type RequestHandler } from '@sveltejs/kit';
 
-const ignoreList = ['.', '..', '__layout.svelte', 'api.ts'];
+const ignoreList = ['.', '..', '+layout.svelte', 'api'];
 
-export async function get(): Promise<EndpointOutput> {
+export const GET: RequestHandler = async () => {
   const dirName = path.resolve(path.join('.', 'src', 'routes', 'chapters'));
   const files = readdirSync(dirName);
   const filtered = files.filter((file) => !ignoreList.includes(file));
-  return {
-    body: filtered.map((file) => file.replace('.svelte', '')),
-  };
-}
+  return json(filtered.map((file) => file.replace('.svelte', '')));
+};

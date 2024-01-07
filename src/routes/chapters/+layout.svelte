@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
   import { setContext } from 'svelte';
   const width = 600;
   const height = 600;

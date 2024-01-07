@@ -91,7 +91,7 @@ export class Ambient implements AmbientLight {
 }
 
 export class Point implements PointLight {
-  type: 'point';
+  type: 'point' = 'point';
   intensity: number;
   position: Vector3;
   tMax = 1;
@@ -114,7 +114,7 @@ export class Point implements PointLight {
 }
 
 export class Directional implements DirectionalLight {
-  type: 'directional';
+  type: 'directional' = 'directional';
   intensity: number;
   direction: Vector3;
   tMax = Infinity;

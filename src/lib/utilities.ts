@@ -3,7 +3,7 @@ import type { Sphere } from './shapes/sphere';
 import type { StaticScene, Vector2, Vector3 } from './types';
 
 export interface ClosestIntersection {
-  closestSphere: Sphere;
+  closestSphere: Sphere | null;
   closestT: number;
 }
 
