@@ -1,5 +1,5 @@
 import { Blue, Green, Red, Yellow } from '$lib/colors';
-import { Ambient, Directional, Point } from '$lib/lights';
+import { Ambient, Directional, Point } from '$lib/rayTracer/lights';
 import { Scene } from '$lib/scene';
 import { Sphere } from '$lib/shapes/sphere';
 

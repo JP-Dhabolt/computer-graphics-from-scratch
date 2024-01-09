@@ -1,6 +1,6 @@
 <script lang="ts">
   import { scene } from '$lib/scenes/chapter-4-scene';
-  import SceneRenderer from '$lib/components/sceneRenderer.svelte';
+  import SceneRenderer from '$lib/components/rayTraceRenderer.svelte';
 </script>
 
 <SceneRenderer {scene}>

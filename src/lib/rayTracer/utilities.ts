@@ -1,6 +1,7 @@
-import { dotProduct, subtract } from './algebra';
-import type { Sphere } from './shapes/sphere';
-import type { StaticScene, Vector2, Vector3 } from './types';
+import { dotProduct, subtract } from '../algebra';
+import type { Sphere } from '../shapes/sphere';
+import type { StaticScene } from './types';
+import type { Vector2, Vector3 } from '../types';
 
 export interface ClosestIntersection {
   closestSphere: Sphere | null;
