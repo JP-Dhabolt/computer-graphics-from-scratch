@@ -5,7 +5,6 @@
   import { Renderer } from '$lib/rayTracer/renderer';
 
   const context = getContext<{ getCanvas: () => HTMLCanvasElement }>('canvas');
-  console.log(context);
 
   onMount(() => {
     const canvas = context.getCanvas();
