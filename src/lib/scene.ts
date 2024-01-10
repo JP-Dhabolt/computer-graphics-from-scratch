@@ -1,6 +1,6 @@
-import { Ambient } from './lights';
+import { Ambient } from './rayTracer/lights';
 import type { Sphere } from './shapes/sphere';
-import type { SceneLight, StaticScene } from './types';
+import type { SceneLight, StaticScene } from './rayTracer/types';
 
 export class Scene implements StaticScene {
   spheres: Sphere[] = [];

@@ -1,8 +1,9 @@
-import { add, clamp, length, multiply, subtract } from './algebra';
-import type { Color } from './colors';
+import { add, clamp, length, multiply, subtract } from '../algebra';
+import type { Color } from '../colors';
 import { MIN_TIME_ABOVE_ZERO, calculateReflectionVector, computeLighting } from './lights';
-import { Scene } from './scene';
-import type { StaticScene, Vector2, Vector3 } from './types';
+import { Scene } from '../scene';
+import type { StaticScene } from './types';
+import type { Vector2, Vector3 } from '../types';
 import { calculateClosestIntersection } from './utilities';
 
 const MAX_RECURSION_DEPTH = 3;

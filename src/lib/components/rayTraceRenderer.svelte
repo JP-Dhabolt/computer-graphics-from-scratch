@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, getContext } from 'svelte';
 
-  import { Renderer } from '$lib/renderer';
-  import type { StaticScene } from '$lib/types';
+  import { Renderer } from '$lib/rayTracer/renderer';
+  import type { StaticScene } from '$lib/rayTracer/types';
 
   const { getCanvas } = getContext<{ getCanvas: () => HTMLCanvasElement }>('canvas');
   export let scene: StaticScene;

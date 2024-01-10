@@ -2,10 +2,9 @@
   import { onMount, getContext } from 'svelte';
 
   import { Green } from '$lib/colors';
-  import { Renderer } from '$lib/renderer';
+  import { Renderer } from '$lib/rayTracer/renderer';
 
   const context = getContext<{ getCanvas: () => HTMLCanvasElement }>('canvas');
-  console.log(context);
 
   onMount(() => {
     const canvas = context.getCanvas();

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/prefer-as-const */
 
-import { dotProduct, length, multiply, subtract } from './algebra';
-import type { AmbientLight, DirectionalLight, PointLight, StaticScene, Vector3 } from './types';
+import { dotProduct, length, multiply, subtract } from '../algebra';
+import type { AmbientLight, DirectionalLight, PointLight, StaticScene } from './types';
+import type { Vector3 } from '../types';
 import { calculateClosestIntersection } from './utilities';
 
 export const MIN_TIME_ABOVE_ZERO = 0.001;

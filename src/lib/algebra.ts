@@ -23,3 +23,20 @@ export function multiply(x: number, v: Vector3): Vector3 {
 export function clamp(x: number, min: number, max: number): number {
   return Math.min(Math.max(x, min), max);
 }
+
+export function interpolate(i0: number, d0: number, i1: number, d1: number): number[] {
+  if (i0 === i1) {
+    return [d0];
+  }
+
+  const values = [];
+  const a = (d1 - d0) / (i1 - i0);
+  let d = d0;
+
+  for (let i = i0; i <= i1; i++) {
+    values.push(d);
+    d += a;
+  }
+
+  return values;
+}
