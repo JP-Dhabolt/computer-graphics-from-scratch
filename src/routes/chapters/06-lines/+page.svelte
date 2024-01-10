@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount, getContext } from 'svelte';
-  import type { Vector2 } from '$lib/types';
 
-  import { Green } from '$lib/colors';
+  import { Green, Red } from '$lib/colors';
   import { Renderer } from '$lib/rasterizer/renderer';
 
   const context = getContext<{ getCanvas: () => HTMLCanvasElement }>('canvas');
@@ -10,9 +9,8 @@
   onMount(() => {
     const canvas = context.getCanvas();
     const renderer = new Renderer({ canvas });
-    const startPoint: Vector2 = [0, 0];
-    const endPoint: Vector2 = [150, 50];
-    renderer.drawLine(startPoint, endPoint, Green);
+    renderer.drawLine([-200, -100], [240, 120], Green);
+    renderer.drawLine([-50, -200], [60, 240], Red);
     renderer.updateCanvas();
   });
 </script>

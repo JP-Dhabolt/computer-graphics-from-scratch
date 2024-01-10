@@ -1,3 +1,4 @@
+import { interpolate } from '$lib/algebra';
 import type { Color } from '../colors';
 import type { Vector2, Vector3 } from '../types';
 
@@ -70,13 +71,28 @@ export class Renderer {
   }
 
   drawLine(startPoint: Vector2, endPoint: Vector2, color: Color): void {
-    const a = (endPoint[1] - startPoint[1]) / (endPoint[0] - startPoint[0]);
-    const b = startPoint[1] - a * startPoint[0];
-    console.log(a, b);
-    for (let x = startPoint[0]; x <= endPoint[0]; x++) {
-      const y = a * x + b;
-      console.log(x, y);
-      this.putPixel(x, y, color);
+    const isHorizontal = Math.abs(endPoint[0] - startPoint[0]) > Math.abs(endPoint[1] - startPoint[1]);
+    if (isHorizontal) {
+      this._drawLine(startPoint[0], startPoint[1], endPoint[0], endPoint[1], color, true);
+    } else {
+      // We are vertical
+      this._drawLine(startPoint[1], startPoint[0], endPoint[1], endPoint[0], color, false);
+    }
+  }
+
+  _drawLine(i0: number, d0: number, i1: number, d1: number, color: Color, isHorizontal: boolean): void {
+    const is0LessThan1 = i0 < i1;
+    const iStart = is0LessThan1 ? i0 : i1;
+    const iEnd = is0LessThan1 ? i1 : i0;
+    const dStart = is0LessThan1 ? d0 : d1;
+    const dEnd = is0LessThan1 ? d1 : d0;
+    const values = interpolate(iStart, dStart, iEnd, dEnd);
+    for (let i = iStart; i <= iEnd; i++) {
+      if (isHorizontal) {
+        this.putPixel(i, values[i - iStart], color);
+      } else {
+        this.putPixel(values[i - iStart], i, color);
+      }
     }
   }
 }
