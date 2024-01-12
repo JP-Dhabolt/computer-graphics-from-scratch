@@ -18,6 +18,6 @@
 <h1>Chapter 7: Filled Triangles</h1>
 <p>
   This is my implementation of <a
-    href="https://gabrielgambetta.com/computer-graphics-from-scratch/07-filled-triangles.html">07-lines</a
+    href="https://gabrielgambetta.com/computer-graphics-from-scratch/07-filled-triangles.html">07-filled-triangles</a
   >.
 </p>
