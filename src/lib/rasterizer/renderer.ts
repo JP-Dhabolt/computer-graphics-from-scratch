@@ -80,6 +80,49 @@ export class Renderer {
     }
   }
 
+  drawWireframeTriangle(p0: Vector2, p1: Vector2, p2: Vector2, color: Color): void {
+    this.drawLine(p0, p1, color);
+    this.drawLine(p1, p2, color);
+    this.drawLine(p2, p0, color);
+  }
+
+  drawFilledTriangle(p0: Vector2, p1: Vector2, p2: Vector2, color: Color): void {
+    let [point0, point1, point2] = [p0, p1, p2];
+
+    if (point1[1] < point0[1]) {
+      [point0, point1] = [point1, point0];
+    }
+    if (point2[1] < point0[1]) {
+      [point0, point2] = [point2, point0];
+    }
+    if (point2[1] < point1[1]) {
+      [point1, point2] = [point2, point1];
+    }
+
+    let x01 = interpolate(point0[1], point0[0], point1[1], point1[0]);
+    const x12 = interpolate(point1[1], point1[0], point2[1], point2[0]);
+    const x02 = interpolate(point0[1], point0[0], point2[1], point2[0]);
+    x01 = x01.slice(0, -1); // Remove the last element, as it is the same as x12[0]
+    const x012 = x01.concat(x12);
+    const middleIndex = Math.floor(x012.length / 2);
+    let x_left: number[] = [];
+    let x_right: number[] = [];
+
+    if (x02[middleIndex] < x012[middleIndex]) {
+      x_left = x02;
+      x_right = x012;
+    } else {
+      x_left = x012;
+      x_right = x02;
+    }
+
+    for (let y = point0[1]; y <= point2[1]; y++) {
+      for (let x = x_left[y - point0[1]]; x <= x_right[y - point0[1]]; x++) {
+        this.putPixel(x, y, color);
+      }
+    }
+  }
+
   _drawLine(i0: number, d0: number, i1: number, d1: number, color: Color, isHorizontal: boolean): void {
     const is0LessThan1 = i0 < i1;
     const iStart = is0LessThan1 ? i0 : i1;
