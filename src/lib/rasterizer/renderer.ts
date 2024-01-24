@@ -1,6 +1,6 @@
 import { interpolate } from '$lib/algebra';
-import type { Color } from '../colors';
-import type { Vector2, Vector3 } from '../types';
+import { adjustIntensity, type Color } from '../colors';
+import type { ShadedPoint, Vector2, Vector3 } from '../types';
 
 export interface RendererOptions {
   canvas: HTMLCanvasElement;
@@ -119,6 +119,59 @@ export class Renderer {
     for (let y = point0[1]; y <= point2[1]; y++) {
       for (let x = x_left[y - point0[1]]; x <= x_right[y - point0[1]]; x++) {
         this.putPixel(x, y, color);
+      }
+    }
+  }
+
+  drawShadedTriangle(p0: ShadedPoint, p1: ShadedPoint, p2: ShadedPoint, color: Color): void {
+    let [point0, point1, point2] = [p0, p1, p2];
+
+    if (point1.y < point0.y) {
+      [point0, point1] = [point1, point0];
+    }
+    if (point2.y < point0.y) {
+      [point0, point2] = [point2, point0];
+    }
+    if (point2.y < point1.y) {
+      [point1, point2] = [point2, point1];
+    }
+
+    let x01 = interpolate(point0.y, point0.x, point1.y, point1.x);
+    let h01 = interpolate(point0.y, point0.intensity, point1.y, point1.intensity);
+    const x12 = interpolate(point1.y, point1.x, point2.y, point2.x);
+    const h12 = interpolate(point1.y, point1.intensity, point2.y, point2.intensity);
+    const x02 = interpolate(point0.y, point0.x, point2.y, point2.x);
+    const h02 = interpolate(point0.y, point0.intensity, point2.y, point2.intensity);
+    x01 = x01.slice(0, -1); // Remove the last element, as it is the same as x12[0]
+    h01 = h01.slice(0, -1); // Remove the last element, as it is the same as h12[0]
+    const x012 = x01.concat(x12);
+    const h012 = h01.concat(h12);
+    const middleIndex = Math.floor(x012.length / 2);
+    let x_left: number[] = [];
+    let x_right: number[] = [];
+    let h_left: number[] = [];
+    let h_right: number[] = [];
+
+    if (x02[middleIndex] < x012[middleIndex]) {
+      x_left = x02;
+      h_left = h02;
+      x_right = x012;
+      h_right = h012;
+    } else {
+      x_left = x012;
+      h_left = h012;
+      x_right = x02;
+      h_right = h02;
+    }
+
+    for (let y = point0.y; y <= point2.y; y++) {
+      const x_l = x_left[y - point0.y];
+      const x_r = x_right[y - point0.y];
+      const hSegment = interpolate(x_l, h_left[y - point0.y], x_r, h_right[y - point0.y]);
+      for (let x = x_l; x <= x_r; x++) {
+        const hSegmentIndex = Math.round(x - x_l);
+        const shadedColor = adjustIntensity(color, hSegment[hSegmentIndex]);
+        this.putPixel(x, y, shadedColor);
       }
     }
   }
