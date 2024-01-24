@@ -1,10 +1,10 @@
 import { interpolate } from '$lib/algebra';
-import { adjustIntensity, type Color } from '../colors';
-import type { ShadedPoint, Vector2, Vector3 } from '../types';
+import { adjustIntensity, Blue, Green, Red, type Color } from '../colors';
+import type { Point3D, ShadedPoint, Vector2, Vector3 } from '../types';
 
 export interface RendererOptions {
   canvas: HTMLCanvasElement;
-  viewportSize?: number;
+  viewportSize?: Vector2;
   zProjectionPlane?: number;
   cameraPosition?: Vector3;
   backgroundColor?: Color;
@@ -23,7 +23,7 @@ export class Renderer {
   context: CanvasRenderingContext2D;
   buffer: ImageData;
   pitch: number;
-  viewportSize: number;
+  viewportSize: Vector2;
   zProjectionPlane: number;
   cameraPosition: Vector3;
   backgroundColor: Color;
@@ -37,7 +37,7 @@ export class Renderer {
     this.context = canvasContext;
     this.buffer = this.context.getImageData(0, 0, canvas.width, canvas.height);
     this.pitch = this.buffer.width * 4;
-    this.viewportSize = viewportSize || 1;
+    this.viewportSize = viewportSize || [1, 1];
     this.zProjectionPlane = zProjectionPlane || 1;
     this.cameraPosition = cameraPosition || [0, 0, 0];
     this.backgroundColor = backgroundColor || { red: 255, green: 255, blue: 255 };
@@ -64,8 +64,8 @@ export class Renderer {
 
   canvasToViewport(point2d: Vector2): Vector3 {
     return [
-      (point2d[0] * this.viewportSize) / this.canvas.width,
-      (point2d[1] * this.viewportSize) / this.canvas.height,
+      (point2d[0] * this.viewportSize[0]) / this.canvas.width,
+      (point2d[1] * this.viewportSize[1]) / this.canvas.height,
       this.zProjectionPlane,
     ];
   }
@@ -176,6 +176,38 @@ export class Renderer {
     }
   }
 
+  drawCube() {
+    // "Front" vertices
+    const vAf: Point3D = { x: -3, y: -1, z: 1 };
+    const vBf: Point3D = { x: -1, y: -1, z: 1 };
+    const vCf: Point3D = { x: -1, y: -3, z: 1 };
+    const vDf: Point3D = { x: -3, y: -3, z: 1 };
+
+    // "Back" vertices
+    const vAb: Point3D = { x: -3, y: -1, z: 2 };
+    const vBb: Point3D = { x: -1, y: -1, z: 2 };
+    const vCb: Point3D = { x: -1, y: -3, z: 2 };
+    const vDb: Point3D = { x: -3, y: -3, z: 2 };
+
+    // Front face
+    this.drawLine(this._projectVertex(vAf), this._projectVertex(vBf), Blue);
+    this.drawLine(this._projectVertex(vBf), this._projectVertex(vCf), Blue);
+    this.drawLine(this._projectVertex(vCf), this._projectVertex(vDf), Blue);
+    this.drawLine(this._projectVertex(vDf), this._projectVertex(vAf), Blue);
+
+    // Back face
+    this.drawLine(this._projectVertex(vAb), this._projectVertex(vBb), Red);
+    this.drawLine(this._projectVertex(vBb), this._projectVertex(vCb), Red);
+    this.drawLine(this._projectVertex(vCb), this._projectVertex(vDb), Red);
+    this.drawLine(this._projectVertex(vDb), this._projectVertex(vAb), Red);
+
+    // Front to back edges
+    this.drawLine(this._projectVertex(vAf), this._projectVertex(vAb), Green);
+    this.drawLine(this._projectVertex(vBf), this._projectVertex(vBb), Green);
+    this.drawLine(this._projectVertex(vCf), this._projectVertex(vCb), Green);
+    this.drawLine(this._projectVertex(vDf), this._projectVertex(vDb), Green);
+  }
+
   _drawLine(i0: number, d0: number, i1: number, d1: number, color: Color, isHorizontal: boolean): void {
     const is0LessThan1 = i0 < i1;
     const iStart = is0LessThan1 ? i0 : i1;
@@ -190,5 +222,16 @@ export class Renderer {
         this.putPixel(values[i - iStart], i, color);
       }
     }
+  }
+
+  _viewportToCanvas(x: number, y: number): Vector2 {
+    return [(x * this.canvas.width) / this.viewportSize[0], (y * this.canvas.height) / this.viewportSize[1]];
+  }
+
+  _projectVertex(vertex: Point3D): Vector2 {
+    return this._viewportToCanvas(
+      (vertex.x * this.zProjectionPlane) / vertex.z,
+      (vertex.y * this.zProjectionPlane) / vertex.z
+    );
   }
 }

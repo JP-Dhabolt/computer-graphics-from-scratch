@@ -6,3 +6,9 @@ export interface ShadedPoint {
   y: number;
   intensity: number;
 }
+
+export interface Point3D {
+  x: number;
+  y: number;
+  z: number;
+}
