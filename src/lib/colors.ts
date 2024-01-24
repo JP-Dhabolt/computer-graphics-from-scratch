@@ -28,3 +28,12 @@ export const Yellow: Color = {
   green: 255,
   blue: 0,
 };
+
+export function adjustIntensity(color: Color, intensity: number): Color {
+  return {
+    red: Math.max(0, Math.min(255, color.red * intensity)),
+    green: Math.max(0, Math.min(255, color.green * intensity)),
+    blue: Math.max(0, Math.min(255, color.blue * intensity)),
+    alpha: color.alpha,
+  };
+}
