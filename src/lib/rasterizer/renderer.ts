@@ -1,6 +1,6 @@
 import { interpolate } from '$lib/algebra';
 import { adjustIntensity, Blue, Green, Red, type Color } from '../colors';
-import type { Point3D, ShadedPoint, Vector2, Vector3 } from '../types';
+import type { Point3D, ShadedPoint, Triangle, Vector2, Vector3 } from '../types';
 
 export interface RendererOptions {
   canvas: HTMLCanvasElement;
@@ -206,6 +206,21 @@ export class Renderer {
     this.drawLine(this._projectVertex(vBf), this._projectVertex(vBb), Green);
     this.drawLine(this._projectVertex(vCf), this._projectVertex(vCb), Green);
     this.drawLine(this._projectVertex(vDf), this._projectVertex(vDb), Green);
+  }
+
+  renderObject(vertices: Point3D[], triangles: Triangle[]): void {
+    const projected: Vector2[] = [];
+    for (const vertex of vertices) {
+      projected.push(this._projectVertex(vertex));
+    }
+
+    for (const triangle of triangles) {
+      this._renderTriangle(triangle, projected);
+    }
+  }
+
+  _renderTriangle(triangle: Triangle, projected: Vector2[]): void {
+    this.drawWireframeTriangle(projected[triangle.a], projected[triangle.b], projected[triangle.c], triangle.color);
   }
 
   _drawLine(i0: number, d0: number, i1: number, d1: number, color: Color, isHorizontal: boolean): void {
