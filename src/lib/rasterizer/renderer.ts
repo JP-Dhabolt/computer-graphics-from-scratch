@@ -1,6 +1,7 @@
 import { interpolate } from '$lib/algebra';
 import { adjustIntensity, Blue, Green, Red, type Color } from '../colors';
 import type { Point3D, ShadedPoint, Triangle, Vector2, Vector3 } from '../types';
+import { RasterScene } from './scene';
 
 export interface RendererOptions {
   canvas: HTMLCanvasElement;
@@ -8,6 +9,7 @@ export interface RendererOptions {
   zProjectionPlane?: number;
   cameraPosition?: Vector3;
   backgroundColor?: Color;
+  scene?: RasterScene;
 }
 
 export interface TraceRayInput {
@@ -27,8 +29,9 @@ export class Renderer {
   zProjectionPlane: number;
   cameraPosition: Vector3;
   backgroundColor: Color;
+  scene: RasterScene;
 
-  constructor({ canvas, viewportSize, zProjectionPlane, cameraPosition, backgroundColor }: RendererOptions) {
+  constructor({ canvas, viewportSize, zProjectionPlane, cameraPosition, backgroundColor, scene }: RendererOptions) {
     this.canvas = canvas;
     const canvasContext = canvas.getContext('2d');
     if (!canvasContext) {
@@ -41,6 +44,7 @@ export class Renderer {
     this.zProjectionPlane = zProjectionPlane || 1;
     this.cameraPosition = cameraPosition || [0, 0, 0];
     this.backgroundColor = backgroundColor || { red: 255, green: 255, blue: 255 };
+    this.scene = scene || new RasterScene([]);
   }
 
   putPixel(x: number, y: number, color: Color): void {
@@ -208,10 +212,18 @@ export class Renderer {
     this.drawLine(this._projectVertex(vDf), this._projectVertex(vDb), Green);
   }
 
-  renderObject(vertices: Point3D[], triangles: Triangle[]): void {
+  renderScene(): void {
+    for (const instance of this.scene.instances) {
+      const model = this.scene.models[instance.model];
+      this.renderObject(model.vertices, model.triangles, instance.position);
+    }
+  }
+
+  renderObject(vertices: Point3D[], triangles: Triangle[], offset: Point3D = { x: 0, y: 0, z: 0 }): void {
     const projected: Vector2[] = [];
     for (const vertex of vertices) {
-      projected.push(this._projectVertex(vertex));
+      const v = { x: vertex.x + offset.x, y: vertex.y + offset.y, z: vertex.z + offset.z };
+      projected.push(this._projectVertex(v));
     }
 
     for (const triangle of triangles) {

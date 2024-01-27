@@ -1,39 +1,24 @@
 <script lang="ts">
   import { onMount, getContext } from 'svelte';
   import { Renderer } from '$lib/rasterizer/renderer';
-  import { Blue, Cyan, Green, Purple, Red, Yellow } from '$lib/colors';
+  import { RasterScene } from '$lib/rasterizer/scene';
 
   const context = getContext<{ getCanvas: () => HTMLCanvasElement }>('canvas');
 
   onMount(() => {
     const canvas = context.getCanvas();
-    const renderer = new Renderer({ canvas });
-    renderer.renderObject(
-      [
-        { x: -0.5, y: 1, z: 8 },
-        { x: -2.5, y: 1, z: 8 },
-        { x: -2.5, y: -1, z: 8 },
-        { x: -0.5, y: -1, z: 8 },
-        { x: -0.5, y: 1, z: 6 },
-        { x: -2.5, y: 1, z: 6 },
-        { x: -2.5, y: -1, z: 6 },
-        { x: -0.5, y: -1, z: 6 },
-      ],
-      [
-        { a: 0, b: 1, c: 2, color: Red },
-        { a: 0, b: 2, c: 3, color: Red },
-        { a: 4, b: 0, c: 3, color: Green },
-        { a: 4, b: 3, c: 7, color: Green },
-        { a: 5, b: 4, c: 7, color: Blue },
-        { a: 5, b: 7, c: 6, color: Blue },
-        { a: 1, b: 5, c: 6, color: Yellow },
-        { a: 1, b: 6, c: 2, color: Yellow },
-        { a: 4, b: 5, c: 1, color: Purple },
-        { a: 4, b: 1, c: 0, color: Purple },
-        { a: 2, b: 6, c: 7, color: Cyan },
-        { a: 2, b: 7, c: 3, color: Cyan },
-      ]
-    );
+    const scene = new RasterScene([
+      {
+        model: 'cube',
+        position: { x: -1.5, y: 0, z: 7 },
+      },
+      {
+        model: 'cube',
+        position: { x: 2.5, y: 0, z: 7 },
+      },
+    ]);
+    const renderer = new Renderer({ canvas, scene });
+    renderer.renderScene();
     renderer.updateCanvas();
   });
 </script>
