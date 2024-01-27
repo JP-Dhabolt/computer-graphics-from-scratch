@@ -41,6 +41,12 @@ export const Cyan: Color = {
   blue: 255,
 };
 
+export const Black: Color = {
+  red: 0,
+  green: 0,
+  blue: 0,
+};
+
 export function adjustIntensity(color: Color, intensity: number): Color {
   return {
     red: Math.max(0, Math.min(255, color.red * intensity)),

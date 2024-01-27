@@ -1,7 +1,7 @@
 import { interpolate } from '$lib/algebra';
 import { adjustIntensity, Blue, Green, Red, type Color } from '../colors';
 import type { Point3D, ShadedPoint, Triangle, Vector2, Vector3 } from '../types';
-import { RasterScene } from './scene';
+import { RasterScene, Transform } from './scene';
 
 export interface RendererOptions {
   canvas: HTMLCanvasElement;
@@ -38,12 +38,14 @@ export class Renderer {
       throw new Error('Could not get canvas context');
     }
     this.context = canvasContext;
+    this.backgroundColor = backgroundColor || { red: 255, green: 255, blue: 255 };
+    this.context.fillStyle = `rgb(${this.backgroundColor.red}, ${this.backgroundColor.green}, ${this.backgroundColor.blue})`;
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.buffer = this.context.getImageData(0, 0, canvas.width, canvas.height);
     this.pitch = this.buffer.width * 4;
     this.viewportSize = viewportSize || [1, 1];
     this.zProjectionPlane = zProjectionPlane || 1;
     this.cameraPosition = cameraPosition || [0, 0, 0];
-    this.backgroundColor = backgroundColor || { red: 255, green: 255, blue: 255 };
     this.scene = scene || new RasterScene([]);
   }
 
@@ -215,20 +217,67 @@ export class Renderer {
   renderScene(): void {
     for (const instance of this.scene.instances) {
       const model = this.scene.models[instance.model];
-      this.renderObject(model.vertices, model.triangles, instance.position);
+      this.renderObject(model.vertices, model.triangles, instance.transform);
     }
   }
 
-  renderObject(vertices: Point3D[], triangles: Triangle[], offset: Point3D = { x: 0, y: 0, z: 0 }): void {
+  renderObject(vertices: Point3D[], triangles: Triangle[], transform: Transform): void {
     const projected: Vector2[] = [];
     for (const vertex of vertices) {
-      const v = { x: vertex.x + offset.x, y: vertex.y + offset.y, z: vertex.z + offset.z };
+      const v = this._applyTransform(vertex, transform);
       projected.push(this._projectVertex(v));
     }
 
     for (const triangle of triangles) {
       this._renderTriangle(triangle, projected);
     }
+  }
+
+  _applyTransform(vertex: Point3D, transform: Transform): Point3D {
+    const scaled = this._scale(vertex, transform.scale);
+    const rotated = this._rotate(scaled, transform.rotation);
+    const translated = this._translate(rotated, transform.translation);
+    return translated;
+  }
+
+  _scale(vertex: Point3D, scale: number): Point3D {
+    return { x: vertex.x * scale, y: vertex.y * scale, z: vertex.z * scale };
+  }
+
+  _rotate(vertex: Point3D, rotation: Point3D): Point3D {
+    // Convert rotation angles from degrees to radians
+    const rotationRadians: Point3D = {
+      x: (rotation.x * Math.PI) / 180,
+      y: (rotation.y * Math.PI) / 180,
+      z: (rotation.z * Math.PI) / 180,
+    };
+
+    // Rotate around x-axis
+    let rotated = {
+      x: vertex.x,
+      y: vertex.y * Math.cos(rotationRadians.x) - vertex.z * Math.sin(rotationRadians.x),
+      z: vertex.y * Math.sin(rotationRadians.x) + vertex.z * Math.cos(rotationRadians.x),
+    };
+
+    // Rotate around y-axis
+    rotated = {
+      x: rotated.z * Math.sin(rotationRadians.y) + rotated.x * Math.cos(rotationRadians.y),
+      y: rotated.y,
+      z: rotated.z * Math.cos(rotationRadians.y) - rotated.x * Math.sin(rotationRadians.y),
+    };
+
+    // Rotate around z-axis
+    rotated = {
+      x: rotated.x * Math.cos(rotationRadians.z) - rotated.y * Math.sin(rotationRadians.z),
+      y: rotated.x * Math.sin(rotationRadians.z) + rotated.y * Math.cos(rotationRadians.z),
+      z: rotated.z,
+    };
+
+    return rotated;
+  }
+
+  _translate(vertex: Point3D, translation: Point3D): Point3D {
+    return { x: vertex.x + translation.x, y: vertex.y + translation.y, z: vertex.z + translation.z };
   }
 
   _renderTriangle(triangle: Triangle, projected: Vector2[]): void {

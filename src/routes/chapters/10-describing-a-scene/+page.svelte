@@ -1,23 +1,25 @@
 <script lang="ts">
   import { onMount, getContext } from 'svelte';
   import { Renderer } from '$lib/rasterizer/renderer';
-  import { RasterScene } from '$lib/rasterizer/scene';
+  import { RasterScene, SceneInstance, Transform } from '$lib/rasterizer/scene';
+  import { Black } from '$lib/colors';
 
   const context = getContext<{ getCanvas: () => HTMLCanvasElement }>('canvas');
 
   onMount(() => {
     const canvas = context.getCanvas();
-    const scene = new RasterScene([
-      {
-        model: 'cube',
-        position: { x: -1.5, y: 0, z: 7 },
-      },
-      {
-        model: 'cube',
-        position: { x: 2.5, y: 0, z: 7 },
-      },
-    ]);
-    const renderer = new Renderer({ canvas, scene });
+    const instances: SceneInstance[] = [
+      new SceneInstance(
+        'cube',
+        new Transform({ translation: { x: -1.5, y: 0, z: 7 }, rotation: { x: 45, y: 0, z: 0 }, scale: 0.75 })
+      ),
+      new SceneInstance(
+        'cube',
+        new Transform({ translation: { x: 2.5, y: 0, z: 7 }, rotation: { x: 0, y: 45, z: 0 }, scale: 0.5 })
+      ),
+    ];
+    const scene = new RasterScene(instances);
+    const renderer = new Renderer({ canvas, scene, backgroundColor: Black });
     renderer.renderScene();
     renderer.updateCanvas();
   });
