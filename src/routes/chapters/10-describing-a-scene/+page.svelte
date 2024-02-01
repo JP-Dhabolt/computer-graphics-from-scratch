@@ -3,6 +3,7 @@
   import { Renderer } from '$lib/rasterizer/renderer';
   import { RasterScene, SceneInstance, Transform } from '$lib/rasterizer/scene';
   import { Black } from '$lib/colors';
+  import { createRotationMatrix4x4X, createRotationMatrix4x4Y } from '$lib/algebra';
 
   const context = getContext<{ getCanvas: () => HTMLCanvasElement }>('canvas');
 
@@ -11,14 +12,15 @@
     const instances: SceneInstance[] = [
       new SceneInstance(
         'cube',
-        new Transform({ translation: { x: -1.5, y: 0, z: 7 }, rotation: { x: 45, y: 0, z: 0 }, scale: 0.75 })
+        new Transform({ translation: { x: -1.5, y: 0, z: 7 }, rotation: createRotationMatrix4x4X(45), scale: 0.75 })
       ),
       new SceneInstance(
         'cube',
-        new Transform({ translation: { x: 2.5, y: 0, z: 7 }, rotation: { x: 0, y: 45, z: 0 }, scale: 0.5 })
+        new Transform({ translation: { x: 2.5, y: 0, z: 7 }, rotation: createRotationMatrix4x4Y(45), scale: 0.5 })
       ),
     ];
-    const scene = new RasterScene(instances);
+    const camera = new Transform({ translation: { x: 0, y: 0, z: 0 } });
+    const scene = new RasterScene(instances, camera);
     const renderer = new Renderer({ canvas, scene, backgroundColor: Black });
     renderer.renderScene();
     renderer.updateCanvas();
