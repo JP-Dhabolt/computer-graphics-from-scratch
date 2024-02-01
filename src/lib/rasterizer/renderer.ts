@@ -1,13 +1,31 @@
-import { interpolate } from '$lib/algebra';
+import {
+  convertPoint3dToHomogeneous,
+  createTranslationMatrix4x4,
+  interpolate,
+  multiply,
+  multiplyMatrix4x4,
+  multiplyMatrix4x4Vector4,
+  transposeMatrix4x4,
+} from '$lib/algebra';
 import { adjustIntensity, Blue, Green, Red, type Color } from '../colors';
-import type { Point3D, ShadedPoint, Vector2, Vector3 } from '../types';
+import {
+  IdentityMatrix,
+  type Matrix4x4,
+  type Point3D,
+  type ShadedPoint,
+  type Triangle,
+  type Vector2,
+  type Vector3,
+  type Vector4,
+} from '../types';
+import { RasterScene } from './scene';
 
 export interface RendererOptions {
   canvas: HTMLCanvasElement;
   viewportSize?: Vector2;
   zProjectionPlane?: number;
-  cameraPosition?: Vector3;
   backgroundColor?: Color;
+  scene?: RasterScene;
 }
 
 export interface TraceRayInput {
@@ -25,22 +43,25 @@ export class Renderer {
   pitch: number;
   viewportSize: Vector2;
   zProjectionPlane: number;
-  cameraPosition: Vector3;
   backgroundColor: Color;
+  scene: RasterScene;
 
-  constructor({ canvas, viewportSize, zProjectionPlane, cameraPosition, backgroundColor }: RendererOptions) {
+  constructor({ canvas, viewportSize, zProjectionPlane, backgroundColor, scene }: RendererOptions) {
     this.canvas = canvas;
     const canvasContext = canvas.getContext('2d');
     if (!canvasContext) {
       throw new Error('Could not get canvas context');
     }
     this.context = canvasContext;
+    this.backgroundColor = backgroundColor || { red: 255, green: 255, blue: 255 };
+    this.context.fillStyle = `rgb(${this.backgroundColor.red}, ${this.backgroundColor.green}, ${this.backgroundColor.blue})`;
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.buffer = this.context.getImageData(0, 0, canvas.width, canvas.height);
     this.pitch = this.buffer.width * 4;
     this.viewportSize = viewportSize || [1, 1];
     this.zProjectionPlane = zProjectionPlane || 1;
-    this.cameraPosition = cameraPosition || [0, 0, 0];
-    this.backgroundColor = backgroundColor || { red: 255, green: 255, blue: 255 };
+    this.scene =
+      scene || new RasterScene([], { scale: 1, rotation: IdentityMatrix, translation: { x: 0, y: 0, z: 0 } });
   }
 
   putPixel(x: number, y: number, color: Color): void {
@@ -190,22 +211,99 @@ export class Renderer {
     const vDb: Point3D = { x: -3, y: -3, z: 2 };
 
     // Front face
-    this.drawLine(this._projectVertex(vAf), this._projectVertex(vBf), Blue);
-    this.drawLine(this._projectVertex(vBf), this._projectVertex(vCf), Blue);
-    this.drawLine(this._projectVertex(vCf), this._projectVertex(vDf), Blue);
-    this.drawLine(this._projectVertex(vDf), this._projectVertex(vAf), Blue);
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vAf)),
+      this._projectVertex(convertPoint3dToHomogeneous(vBf)),
+      Blue
+    );
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vBf)),
+      this._projectVertex(convertPoint3dToHomogeneous(vCf)),
+      Blue
+    );
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vCf)),
+      this._projectVertex(convertPoint3dToHomogeneous(vDf)),
+      Blue
+    );
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vDf)),
+      this._projectVertex(convertPoint3dToHomogeneous(vAf)),
+      Blue
+    );
 
     // Back face
-    this.drawLine(this._projectVertex(vAb), this._projectVertex(vBb), Red);
-    this.drawLine(this._projectVertex(vBb), this._projectVertex(vCb), Red);
-    this.drawLine(this._projectVertex(vCb), this._projectVertex(vDb), Red);
-    this.drawLine(this._projectVertex(vDb), this._projectVertex(vAb), Red);
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vAb)),
+      this._projectVertex(convertPoint3dToHomogeneous(vBb)),
+      Red
+    );
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vBb)),
+      this._projectVertex(convertPoint3dToHomogeneous(vCb)),
+      Red
+    );
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vCb)),
+      this._projectVertex(convertPoint3dToHomogeneous(vDb)),
+      Red
+    );
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vDb)),
+      this._projectVertex(convertPoint3dToHomogeneous(vAb)),
+      Red
+    );
 
     // Front to back edges
-    this.drawLine(this._projectVertex(vAf), this._projectVertex(vAb), Green);
-    this.drawLine(this._projectVertex(vBf), this._projectVertex(vBb), Green);
-    this.drawLine(this._projectVertex(vCf), this._projectVertex(vCb), Green);
-    this.drawLine(this._projectVertex(vDf), this._projectVertex(vDb), Green);
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vAf)),
+      this._projectVertex(convertPoint3dToHomogeneous(vAb)),
+      Green
+    );
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vBf)),
+      this._projectVertex(convertPoint3dToHomogeneous(vBb)),
+      Green
+    );
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vCf)),
+      this._projectVertex(convertPoint3dToHomogeneous(vCb)),
+      Green
+    );
+    this.drawLine(
+      this._projectVertex(convertPoint3dToHomogeneous(vDf)),
+      this._projectVertex(convertPoint3dToHomogeneous(vDb)),
+      Green
+    );
+  }
+
+  renderScene(): void {
+    const cameraTranslation = this.scene.camera.translation;
+    const invertedCameraPosition = multiply(-1, [cameraTranslation.x, cameraTranslation.y, cameraTranslation.z]);
+    const cameraTranslationMatrix = createTranslationMatrix4x4(invertedCameraPosition);
+    const transposedCameraRotationMatrix = transposeMatrix4x4(this.scene.camera.rotation);
+    const cameraMatrix = multiplyMatrix4x4(transposedCameraRotationMatrix, cameraTranslationMatrix);
+    for (const instance of this.scene.instances) {
+      const model = this.scene.models[instance.model];
+      const transform = multiplyMatrix4x4(cameraMatrix, instance.transformMatrix);
+      this.renderObject(model.vertices, model.triangles, transform);
+    }
+  }
+
+  renderObject(vertices: Point3D[], triangles: Triangle[], transform: Matrix4x4): void {
+    const projected: Vector2[] = [];
+    for (const vertex of vertices) {
+      const vertexH: Vector4 = [vertex.x, vertex.y, vertex.z, 1];
+      projected.push(this._projectVertex(multiplyMatrix4x4Vector4(transform, vertexH)));
+    }
+
+    for (const triangle of triangles) {
+      this._renderTriangle(triangle, projected);
+    }
+  }
+
+  _renderTriangle(triangle: Triangle, projected: Vector2[]): void {
+    this.drawWireframeTriangle(projected[triangle.a], projected[triangle.b], projected[triangle.c], triangle.color);
   }
 
   _drawLine(i0: number, d0: number, i1: number, d1: number, color: Color, isHorizontal: boolean): void {
@@ -228,10 +326,10 @@ export class Renderer {
     return [(x * this.canvas.width) / this.viewportSize[0], (y * this.canvas.height) / this.viewportSize[1]];
   }
 
-  _projectVertex(vertex: Point3D): Vector2 {
+  _projectVertex(vertex: Vector4): Vector2 {
     return this._viewportToCanvas(
-      (vertex.x * this.zProjectionPlane) / vertex.z,
-      (vertex.y * this.zProjectionPlane) / vertex.z
+      (vertex[0] * this.zProjectionPlane) / vertex[2],
+      (vertex[1] * this.zProjectionPlane) / vertex[2]
     );
   }
 }

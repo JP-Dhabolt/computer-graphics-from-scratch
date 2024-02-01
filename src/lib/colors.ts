@@ -29,6 +29,24 @@ export const Yellow: Color = {
   blue: 0,
 };
 
+export const Purple: Color = {
+  red: 255,
+  green: 0,
+  blue: 255,
+};
+
+export const Cyan: Color = {
+  red: 0,
+  green: 255,
+  blue: 255,
+};
+
+export const Black: Color = {
+  red: 0,
+  green: 0,
+  blue: 0,
+};
+
 export function adjustIntensity(color: Color, intensity: number): Color {
   return {
     red: Math.max(0, Math.min(255, color.red * intensity)),

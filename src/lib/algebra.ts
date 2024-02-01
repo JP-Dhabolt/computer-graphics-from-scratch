@@ -1,7 +1,11 @@
-import type { Vector3 } from './types';
+import type { Matrix4x4, Point3D, Vector3, Vector4 } from './types';
 
 export function dotProduct(v1: Vector3, v2: Vector3): number {
   return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
+export function dotProduct4(v1: Vector4, v2: Vector4): number {
+  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3];
 }
 
 export function subtract(v1: Vector3, v2: Vector3): Vector3 {
@@ -39,4 +43,108 @@ export function interpolate(i0: number, d0: number, i1: number, d1: number): num
   }
 
   return values;
+}
+
+export function multiplyMatrix4x4(m1: Matrix4x4, m2: Matrix4x4): Matrix4x4 {
+  const result: Matrix4x4 = [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ];
+
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      for (let k = 0; k < 4; k++) {
+        result[i][j] += m1[i][k] * m2[k][j];
+      }
+    }
+  }
+
+  return result;
+}
+
+export function transposeMatrix4x4(m: Matrix4x4): Matrix4x4 {
+  const result: Matrix4x4 = [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ];
+
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < m.length; j++) {
+      result[i][j] = m[j][i];
+    }
+  }
+
+  return result;
+}
+
+export function multiplyMatrix4x4Vector4(m: Matrix4x4, v: Vector4): Vector4 {
+  const result: Vector4 = [0, 0, 0, 0];
+
+  for (let i = 0; i < 4; i++) {
+    result[i] = dotProduct4(m[i], v);
+  }
+
+  return result;
+}
+
+export function createRotationMatrix4x4X(angleInDegrees: number): Matrix4x4 {
+  const c = Math.cos((angleInDegrees * Math.PI) / 180);
+  const s = Math.sin((angleInDegrees * Math.PI) / 180);
+
+  return [
+    [1, 0, 0, 0],
+    [0, c, -s, 0],
+    [0, s, c, 0],
+    [0, 0, 0, 1],
+  ];
+}
+
+export function createRotationMatrix4x4Y(angleInDegrees: number): Matrix4x4 {
+  const c = Math.cos((angleInDegrees * Math.PI) / 180);
+  const s = Math.sin((angleInDegrees * Math.PI) / 180);
+
+  return [
+    [c, 0, s, 0],
+    [0, 1, 0, 0],
+    [-s, 0, c, 0],
+    [0, 0, 0, 1],
+  ];
+}
+
+export function createRotationMatrix4x4Z(angleInDegrees: number): Matrix4x4 {
+  const c = Math.cos((angleInDegrees * Math.PI) / 180);
+  const s = Math.sin((angleInDegrees * Math.PI) / 180);
+
+  return [
+    [c, -s, 0, 0],
+    [s, c, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1],
+  ];
+}
+
+export function createTranslationMatrix4x4(v: Vector3): Matrix4x4 {
+  return [
+    [1, 0, 0, v[0]],
+    [0, 1, 0, v[1]],
+    [0, 0, 1, v[2]],
+    [0, 0, 0, 1],
+  ];
+}
+
+export function createScaleMatrix4x4(scale: number): Matrix4x4 {
+  return [
+    [scale, 0, 0, 0],
+    [0, scale, 0, 0],
+    [0, 0, scale, 0],
+    [0, 0, 0, 1],
+  ];
+}
+
+export function convertPoint3dToHomogeneous(p: Point3D): Vector4 {
+  return [p.x, p.y, p.z, 1];
 }
