@@ -24,6 +24,16 @@ export interface Point3D {
   z: number;
 }
 
+export interface Line3D {
+  start: Point3D;
+  end: Point3D;
+}
+
+export interface Plane {
+  normal: Vector3;
+  distance: number;
+}
+
 export interface Triangle {
   a: number;
   b: number;
