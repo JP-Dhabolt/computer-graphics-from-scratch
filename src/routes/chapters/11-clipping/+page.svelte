@@ -27,7 +27,7 @@
       scene,
       backgroundColor: Black,
       clippingPlanes: [
-        { normal: [0, 0, 1], distance: -5.75 }, // Near
+        { normal: [0, 0, 1], distance: -6.7 }, // Near
         { normal: [s2, 0, s2], distance: 0 }, // Left
         { normal: [-s2, 0, s2], distance: 0 }, // Right
         { normal: [0, -s2, s2], distance: 0 }, // Top

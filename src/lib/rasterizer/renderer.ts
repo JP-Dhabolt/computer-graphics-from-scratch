@@ -281,18 +281,20 @@ export class Renderer {
     const cameraTranslationMatrix = createTranslationMatrix4x4(invertedCameraPosition);
     const transposedCameraRotationMatrix = transposeMatrix4x4(this.scene.camera.rotation);
     const cameraMatrix = multiplyMatrix4x4(transposedCameraRotationMatrix, cameraTranslationMatrix);
-    const clippedScene = this._clipScene();
-    for (const instance of clippedScene.instances) {
+    for (const instance of this.scene.instances) {
       const transform = multiplyMatrix4x4(cameraMatrix, instance.transformMatrix);
-      this.renderObject(instance.vertices, instance.triangles, transform);
+      const clippedInstance = this._clipInstance(instance, this.clippingPlanes, transform);
+      if (clippedInstance) {
+        this.renderObject(clippedInstance.vertices, clippedInstance.triangles);
+      }
     }
   }
 
-  renderObject(vertices: Point3D[], triangles: Triangle[], transform: Matrix4x4): void {
+  renderObject(vertices: Point3D[], triangles: Triangle[]): void {
     const projected: Vector2[] = [];
     for (const vertex of vertices) {
       const vertexH: Vector4 = [vertex.x, vertex.y, vertex.z, 1];
-      projected.push(this._projectVertex(multiplyMatrix4x4Vector4(transform, vertexH)));
+      projected.push(this._projectVertex(vertexH));
     }
 
     for (const triangle of triangles) {
@@ -300,36 +302,45 @@ export class Renderer {
     }
   }
 
-  _clipScene(): RasterScene {
-    const clippedInstances = this.scene.instances.map((instance) => {
-      return this._clipInstance(instance, this.clippingPlanes);
-    });
-    return new RasterScene(clippedInstances.filter((i) => i !== undefined) as SceneInstance[], this.scene.camera);
+  _transformInstance(instance: SceneInstance, transform: Matrix4x4): SceneInstance {
+    const transformedVertices = instance.vertices.map((v) => multiplyMatrix4x4Vector4(transform, [v.x, v.y, v.z, 1]));
+    instance.vertices = transformedVertices.map((v) => ({ x: v[0], y: v[1], z: v[2] }));
+    return instance;
   }
-
-  _clipInstance(instance: SceneInstance, planes: Plane[]): SceneInstance | undefined {
+  _clipInstance(instance: SceneInstance, planes: Plane[], transform: Matrix4x4): SceneInstance | undefined {
     if (planes.length === 0) {
-      return instance;
+      return this._transformInstance(instance, transform);
     }
 
     for (const plane of planes) {
-      return this._clipInstanceAgainstPlane(instance, plane);
+      return this._clipInstanceAgainstPlane(instance, plane, transform);
     }
   }
 
-  _clipInstanceAgainstPlane(instance: SceneInstance, plane: Plane): SceneInstance | undefined {
-    const distance = getSignedDistance(plane, instance.boundingSphereCenter);
-    if (distance > instance.boundingSphereRadius) {
-      return instance;
-    } else if (distance < -instance.boundingSphereRadius) {
+  _clipInstanceAgainstPlane(instance: SceneInstance, plane: Plane, transform: Matrix4x4): SceneInstance | undefined {
+    const modelCenter = this.scene.models[instance.model].center;
+    const centerVec4: Vector4 = [modelCenter.x, modelCenter.y, modelCenter.z, 1];
+    const boundingSphereCenter = multiplyMatrix4x4Vector4(transform, centerVec4);
+    const distance = getSignedDistance(plane, {
+      x: boundingSphereCenter[0],
+      y: boundingSphereCenter[1],
+      z: boundingSphereCenter[2],
+    });
+    const boundingSphereRadius = this.scene.models[instance.model].radius * instance.transform.scale;
+    console.log('Distance: ', distance, 'Bounding sphere radius: ', boundingSphereRadius);
+    if (distance > boundingSphereRadius) {
+      return this._transformInstance(instance, transform);
+    } else if (distance < -boundingSphereRadius) {
       console.log('Discarding instance');
       return undefined;
     } else {
       console.log('Clipping instance');
-      const copiedVertices: Point3D[] = instance.vertices.map((v) => ({ x: v.x, y: v.y, z: v.z }));
-      const copiedTriangles: Triangle[] = instance.triangles.map((t) => ({ a: t.a, b: t.b, c: t.c, color: t.color }));
+      const transformedVertices = instance.vertices.map((v) => multiplyMatrix4x4Vector4(transform, [v.x, v.y, v.z, 1]));
+      const copiedVertices = transformedVertices.map((v) => ({ x: v[0], y: v[1], z: v[2] }));
+      const copiedTriangles: Triangle[] = instance.triangles.slice();
       const clippedInstance = new SceneInstance(instance.model, instance.transform, copiedVertices, copiedTriangles);
       clippedInstance.triangles = this._clipTrianglesAgainstPlane(clippedInstance.triangles, plane, copiedVertices);
+      return clippedInstance;
     }
   }
 
@@ -340,9 +351,13 @@ export class Renderer {
   }
 
   _clipTriangle(triangle: Triangle, plane: Plane, vertices: Point3D[]): Triangle[] {
-    const d0 = getSignedDistance(plane, vertices[triangle.a]);
-    const d1 = getSignedDistance(plane, vertices[triangle.b]);
-    const d2 = getSignedDistance(plane, vertices[triangle.c]);
+    const p0 = vertices[triangle.a];
+    const p1 = vertices[triangle.b];
+    const p2 = vertices[triangle.c];
+
+    const d0 = getSignedDistance(plane, p0);
+    const d1 = getSignedDistance(plane, p1);
+    const d2 = getSignedDistance(plane, p2);
 
     const isD0Positive = d0 >= 0;
     const isD1Positive = d1 >= 0;
@@ -362,12 +377,13 @@ export class Renderer {
   }
 
   _clipTriangleWithTwoPositive(plane: Plane, triangle: Triangle, distances: number[], vertices: Point3D[]): Triangle[] {
+    console.log('Clipping triangle and adding two new');
     // Determine the negative vertex
     const negativeVertexIndex = distances.findIndex((d) => d < 0);
     const negativeVertex = vertices[negativeVertexIndex];
 
     // Determine the positive vertices
-    const positiveVerticesIndices = distances.filter((d) => d >= 0);
+    const positiveVerticesIndices = distances.filter((d) => d >= 0).map((d) => distances.indexOf(d));
     const positiveVertices = positiveVerticesIndices.map((index) => vertices[index]);
 
     // Calculate the intersection points of the lines starting with the positive vertices and ending with the negative vertex with the plane
@@ -388,12 +404,13 @@ export class Renderer {
   }
 
   _clipTriangleWithOnePositive(plane: Plane, triangle: Triangle, distances: number[], vertices: Point3D[]): Triangle[] {
+    console.log('Clipping triangle and replacing with a new one');
     // Determine the positive vertex
     const positiveVertexIndex = distances.findIndex((d) => d >= 0);
     const positiveVertex = vertices[positiveVertexIndex];
 
     // Determine the negative indices
-    const negativeVerticesIndices = distances.filter((d) => d < 0);
+    const negativeVerticesIndices = distances.filter((d) => d < 0).map((d) => distances.indexOf(d));
 
     // Calculate the intersection points of the lines starting with the positive vertex and ending with the negative vertices with the plane
     const intersectionPoints = negativeVerticesIndices.map((negativeVertexIndex) =>
