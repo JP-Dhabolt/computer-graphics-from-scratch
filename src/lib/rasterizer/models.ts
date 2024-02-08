@@ -4,6 +4,8 @@ import type { Point3D, Triangle } from '$lib/types';
 export interface RasterModel {
   vertices: Point3D[];
   triangles: Triangle[];
+  center: Point3D;
+  radius: number;
 }
 
 export const cubeModel: RasterModel = {
@@ -31,6 +33,8 @@ export const cubeModel: RasterModel = {
     { a: 2, b: 6, c: 7, color: Cyan },
     { a: 2, b: 7, c: 3, color: Cyan },
   ],
+  center: { x: 0, y: 0, z: 0 },
+  radius: Math.sqrt(3),
 };
 
 export const modelMap = {

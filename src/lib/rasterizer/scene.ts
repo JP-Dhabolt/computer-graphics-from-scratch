@@ -1,5 +1,5 @@
 import { createScaleMatrix4x4, createTranslationMatrix4x4, multiplyMatrix4x4 } from '$lib/algebra';
-import { IdentityMatrix, type Matrix4x4, type Point3D } from '$lib/types';
+import { IdentityMatrix, type Matrix4x4, type Point3D, type Triangle } from '$lib/types';
 import { modelMap } from './models';
 
 export interface TransformArgs {
@@ -22,10 +22,14 @@ export class Transform {
 
 export class SceneInstance {
   public transformMatrix: Matrix4x4;
+  // public boundingSphereCenter: Point3D;
+  // public boundingSphereRadius: number;
 
   constructor(
     public model: keyof typeof modelMap,
-    public transform: Transform = new Transform()
+    public transform: Transform = new Transform(),
+    public vertices: Point3D[] = modelMap[model].vertices.slice(),
+    public triangles: Triangle[] = modelMap[model].triangles.slice()
   ) {
     const translationMatrix = createTranslationMatrix4x4([
       transform.translation.x,
@@ -35,6 +39,16 @@ export class SceneInstance {
     const scalingMatrix = createScaleMatrix4x4(transform.scale);
     const intermediateMatrix = multiplyMatrix4x4(transform.rotation, scalingMatrix);
     this.transformMatrix = multiplyMatrix4x4(translationMatrix, intermediateMatrix);
+    // const modelCenter = modelMap[model].center;
+    // const boundingSphereCenter = multiplyMatrix4x4Vector4(this.transformMatrix, [
+    //   modelCenter.x,
+    //   modelCenter.y,
+    //   modelCenter.z,
+    //   1,
+    // ]);
+    // this.boundingSphereCenter = { x: boundingSphereCenter[0], y: boundingSphereCenter[1], z: boundingSphereCenter[2] };
+    // const modelRadius = modelMap[model].radius;
+    // this.boundingSphereRadius = modelRadius * transform.scale;
   }
 }
 

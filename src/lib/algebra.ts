@@ -1,4 +1,4 @@
-import type { Matrix4x4, Point3D, Vector3, Vector4 } from './types';
+import type { Line3D, Matrix4x4, Plane, Point3D, Vector3, Vector4 } from './types';
 
 export function dotProduct(v1: Vector3, v2: Vector3): number {
   return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
@@ -147,4 +147,27 @@ export function createScaleMatrix4x4(scale: number): Matrix4x4 {
 
 export function convertPoint3dToHomogeneous(p: Point3D): Vector4 {
   return [p.x, p.y, p.z, 1];
+}
+
+export function convertPoint3dToVector3(p: Point3D): Vector3 {
+  return [p.x, p.y, p.z];
+}
+
+export function getSignedDistance(plane: Plane, point: Point3D): number {
+  const dot = dotProduct(plane.normal, [point.x, point.y, point.z]);
+  return dot + plane.distance;
+}
+
+export function getIntersectionPoint(plane: Plane, line: Line3D): Point3D {
+  const lineVector = subtract(convertPoint3dToVector3(line.end), convertPoint3dToVector3(line.start));
+
+  const numerator = -getSignedDistance(plane, line.start);
+  const denominator = dotProduct(lineVector, plane.normal);
+  const t = numerator / denominator;
+
+  return {
+    x: line.start.x + t * lineVector[0],
+    y: line.start.y + t * lineVector[1],
+    z: line.start.z + t * lineVector[2],
+  };
 }
