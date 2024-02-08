@@ -395,6 +395,7 @@ export class Renderer {
     vertices.push(...intersectionPoints);
 
     // Return two new triangles with the positive vertices and the new vertices
+    // TODO: Verify that the order of the vertices is correct, as clipping occurs but renders strangely
     const newTriangles: Triangle[] = [
       { a: positiveVerticesIndices[0], b: positiveVerticesIndices[1], c: vertices.length - 2, color: triangle.color },
       { a: vertices.length - 2, b: positiveVerticesIndices[1], c: vertices.length - 1, color: triangle.color },
@@ -421,6 +422,7 @@ export class Renderer {
     vertices.push(...intersectionPoints);
 
     // Return a new triangle with the positive vertex and the new vertices
+    // TODO: Verify that the order of the vertices is correct, as clipping occurs but renders strangely
     return [{ a: positiveVertexIndex, b: vertices.length - 2, c: vertices.length - 1, color: triangle.color }];
   }
 
